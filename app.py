@@ -2,6 +2,7 @@
 import json
 import pathlib
 from datetime import datetime, timezone
+import asyncio
 
 import streamlit as st
 import pandas as pd
@@ -94,7 +95,10 @@ def show_results(scores: dict, summary: str) -> None:
     st.plotly_chart(fig, use_container_width=True)
 
     st.write("### 患者向けフィードバック")
-    st.write(prompts.feedback_for_patient(summary))
+    feedback = asyncio.run(
+        prompts.feedback_for_patient_async(summary, st.session_state.user_name)
+    )
+    st.write(feedback)
 
 
 
@@ -102,7 +106,7 @@ def questionnaire_flow() -> None:
     if st.session_state.index >= len(st.session_state.questions):
         with st.spinner("分析中..."):
             scores = questionnaire.score_answers(st.session_state.answers)
-            summary = prompts.evaluation_summary(scores)
+            summary = asyncio.run(prompts.evaluation_summary_async(scores))
             save_results(scores, summary)
             show_results(scores, summary)
         return
@@ -153,9 +157,16 @@ def staff_dashboard() -> None:
     st.write(summary)
 
     st.write("### AIによる推奨対応")
-    fb = prompts.feedback_for_staff(summary)
+    fb = asyncio.run(prompts.feedback_for_staff_async(summary))
     try:
-        st.json(json.loads(fb))
+        fb_json = json.loads(fb)
+        text = (
+            f"リスク傾向要約: {fb_json.get('risk_profile_summary', '')}\n\n"
+            f"注意点: {'、'.join(fb_json.get('caution_points', []))}\n\n"
+            f"推奨対応: {'、'.join(fb_json.get('recommended_actions', []))}\n\n"
+            f"エスカレーションプラン: {fb_json.get('escalation_plan', '')}"
+        )
+        st.write(text)
     except json.JSONDecodeError:
         st.write(fb)
     st.write("### 回答一覧")
