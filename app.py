@@ -1,8 +1,9 @@
-"""Streamlit application for questionnaire (Phase 2)."""
+"""Streamlit application for questionnaire and staff dashboard (Phase 3)."""
 import json
 import pathlib
 
 import streamlit as st
+import pandas as pd
 
 import data_persistence
 import prompts
@@ -71,11 +72,39 @@ def questionnaire_flow() -> None:
         st.experimental_rerun()
 
 
+def staff_dashboard() -> None:
+    """Display stored questionnaire results for staff."""
+    st.subheader("医療従事者向け分析")
+    csv_path = data_persistence.CSV_PATH
+    if not csv_path.exists():
+        st.write("データがまだありません。")
+        return
+    df = pd.read_csv(csv_path)
+    if df.empty:
+        st.write("データがまだありません。")
+        return
+    sessions = df[["user_id", "evaluation_summary"]].drop_duplicates().reset_index(drop=True)
+    selected = st.selectbox(
+        "ユーザーを選択してください", sessions.index,
+        format_func=lambda i: f"{sessions.loc[i, 'user_id']} ({i})"
+    )
+    user_id = sessions.loc[selected, "user_id"]
+    st.write("### 評価サマリー")
+    st.write(sessions.loc[selected, "evaluation_summary"])
+    st.write("### 回答一覧")
+    st.table(df[df["user_id"] == user_id][["question_text", "answer_text"]])
+
+
 def main() -> None:
     st.title("Patient Profiling System")
-    init_state()
-    questionnaire_flow()
+    mode = st.sidebar.radio("モードを選択", ("患者モード", "医療従事者モード"))
+    if mode == "患者モード":
+        init_state()
+        questionnaire_flow()
+    else:
+        staff_dashboard()
 
 
 if __name__ == "__main__":
     main()
+
