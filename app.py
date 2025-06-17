@@ -88,7 +88,7 @@ def save_results(scores: dict, summary: str) -> None:
 
 
 def show_results(scores: dict, summary: str) -> None:
-    """Display radar chart and AI-generated feedback."""
+    """Display radar chart and patient-facing feedback only."""
     st.subheader("結果")
     fig = questionnaire.radar_chart(scores)
     st.plotly_chart(fig, use_container_width=True)
@@ -96,12 +96,6 @@ def show_results(scores: dict, summary: str) -> None:
     st.write("### 患者向けフィードバック")
     st.write(prompts.feedback_for_patient(summary))
 
-    st.write("### 医療従事者向け分析")
-    staff_fb = prompts.feedback_for_staff(summary)
-    try:
-        st.json(json.loads(staff_fb))
-    except json.JSONDecodeError:
-        st.write(staff_fb)
 
 
 def questionnaire_flow() -> None:

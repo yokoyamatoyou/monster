@@ -98,17 +98,48 @@ def _generate_unique_question(axis: str, existing: List[str], temp: float, categ
     return q
 
 
+from concurrent.futures import ThreadPoolExecutor
+import threading
+
+
+def _generate_axis_questions(
+    axis: str,
+    num_questions: int,
+    existing: List[str],
+    lock: threading.Lock,
+) -> List[dict]:
+    """Generate questions for a single axis in a thread."""
+    axis_questions: List[dict] = []
+    for i in range(num_questions):
+        temp = 0.4 + 0.02 * i
+        category = random.choice(prompts.AXIS_CATEGORIES.get(axis, ["一般"]))
+        q = _generate_unique_question(axis, existing, temp, category)
+        with lock:
+            existing.append(q["question_text"])
+        axis_questions.append(q)
+    return axis_questions
+
+
 def generate_questionnaire(num_questions_per_axis: int = 3) -> List[dict]:
-    """Generate a list of questions covering all axes."""
+    """Generate a list of questions covering all axes using threads."""
     questions: List[dict] = []
     existing_texts: List[str] = []
-    for axis in AXES:
-        for i in range(num_questions_per_axis):
-            temp = 0.4 + 0.02 * i
-            category = random.choice(prompts.AXIS_CATEGORIES.get(axis, ["一般"]))
-            q = _generate_unique_question(axis, existing_texts, temp, category)
-            questions.append(q)
-            existing_texts.append(q["question_text"])
+    lock = threading.Lock()
+
+    with ThreadPoolExecutor(max_workers=len(AXES)) as executor:
+        futures = [
+            executor.submit(
+                _generate_axis_questions,
+                axis,
+                num_questions_per_axis,
+                existing_texts,
+                lock,
+            )
+            for axis in AXES
+        ]
+        for f in futures:
+            questions.extend(f.result())
+
     return questions
 
 
