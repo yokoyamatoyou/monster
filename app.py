@@ -9,6 +9,11 @@ import data_persistence
 import prompts
 import questionnaire
 
+CONSENT_MESSAGE = (
+    "このアンケートの回答は匿名化され、分析目的で利用されます。"\
+    "個人を特定する情報は保存されません。"
+)
+
 
 STATIC_DIR = pathlib.Path(__file__).parent / "static"
 
@@ -29,6 +34,11 @@ def init_state() -> None:
         st.session_state.answers = []
     if "index" not in st.session_state:
         st.session_state.index = 0
+
+
+def show_consent() -> None:
+    """Display consent message before starting the questionnaire."""
+    st.info(CONSENT_MESSAGE)
 
 
 def save_results(scores: dict) -> None:
@@ -99,6 +109,7 @@ def main() -> None:
     st.title("Patient Profiling System")
     mode = st.sidebar.radio("モードを選択", ("患者モード", "医療従事者モード"))
     if mode == "患者モード":
+        show_consent()
         init_state()
         questionnaire_flow()
     else:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
@@ -36,7 +36,7 @@ def save_interaction(
             writer.writeheader()
         writer.writerow(
             {
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "user_id": user_id,
                 "question_text": question_text,
                 "answer_text": answer_text,
