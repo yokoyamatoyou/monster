@@ -2,8 +2,18 @@
 from __future__ import annotations
 
 import os
+import random
 from typing import List
 import openai
+
+# Predefined categories for each axis to diversify questions
+AXIS_CATEGORIES = {
+    "特権意識と期待": ["治療計画", "予約や待ち時間", "サービスへの要望"],
+    "情動の不安定性": ["ストレス対処", "気分の変化", "不安への向き合い方"],
+    "不信感と猜疑心": ["情報の透明性", "他院との比較", "説明への納得感"],
+    "依存性と操作性": ["相談相手", "安心感を求める行動", "支援への期待"],
+    "統制欲求と完璧主義": ["治療スケジュール管理", "生活リズム", "計画の厳密さ"],
+}
 
 
 def _call_openai(messages: List[dict], temperature: float) -> str:
@@ -21,16 +31,18 @@ def _call_openai(messages: List[dict], temperature: float) -> str:
         return f"APIError: {e}"
 
 
-def generate_question(axis: str, temperature: float = 0.4) -> str:
-    """Generate a single question for the given axis."""
+def generate_question(axis: str, category: str | None = None, temperature: float = 0.4) -> str:
+    """Generate a single question for the given axis and optional category."""
+    if category is None:
+        category = random.choice(AXIS_CATEGORIES.get(axis, ["一般"]))
     system = (
         "You are a medical survey designer. Use non-clinical wording in Japanese to "
-        "inquire about patient personality traits. The question must be short and the "
-        "reply should be formatted as JSON with keys 'question_text' and 'axis'."
+        "ask the patient about preferences or concerns as part of a treatment plan. "
+        "The reply must be JSON with keys 'question_text' and 'axis'."
     )
     user = (
-        "Generate one short question related to the following axis "
-        f"'{axis}'."
+        f"Category: {category}. Generate one short question related to the axis '{axis}' "
+        "that feels like part of routine consultation."
     )
     messages = [
         {"role": "system", "content": system},

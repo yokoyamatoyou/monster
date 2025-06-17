@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import random
 from typing import Dict, List
 
 import plotly.graph_objects as go
@@ -24,7 +25,8 @@ def generate_questionnaire(num_questions_per_axis: int = 5) -> List[dict]:
     for axis in AXES:
         for i in range(num_questions_per_axis):
             temp = 0.4 + 0.02 * i
-            q_json = prompts.generate_question(axis, temperature=temp)
+            category = random.choice(prompts.AXIS_CATEGORIES.get(axis, ["一般"]))
+            q_json = prompts.generate_question(axis, category=category, temperature=temp)
             try:
                 q = json.loads(q_json)
             except json.JSONDecodeError:
