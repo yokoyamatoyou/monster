@@ -12,10 +12,13 @@ def _call_openai(messages: List[dict], temperature: float) -> str:
     if not api_key:
         raise ValueError("OPENAI_API_KEY not set")
     openai.api_key = api_key
-    response = openai.ChatCompletion.create(
-        model="gpt-4.1", messages=messages, temperature=temperature
-    )
-    return response.choices[0].message["content"].strip()
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4.1", messages=messages, temperature=temperature
+        )
+        return response.choices[0].message["content"].strip()
+    except openai.OpenAIError as e:
+        return f"APIError: {e}"
 
 
 def generate_question(axis: str, temperature: float = 0.4) -> str:
@@ -40,7 +43,8 @@ def feedback_for_patient(summary: str, temperature: float = 0.1) -> str:
     """Generate patient-facing feedback based on answer summary."""
     system = (
         "You are an empathetic counselor. Provide reassuring feedback summarizing what "
-        "the patient values, avoiding mention of risk." 
+        "the patient values. Your tone must be supportive and avoid language that could "
+        "stigmatize or label the patient. Mention nothing about risk."
     )
     user = (
         "Based on the following summary of questionnaire answers, write concise "
@@ -57,6 +61,8 @@ def feedback_for_staff(summary: str, temperature: float = 0.1) -> str:
     """Generate staff-facing feedback in structured JSON."""
     system = (
         "You are an experienced clinical psychologist and risk manager."
+        " Provide actionable suggestions in Japanese and avoid stigmatizing or"
+        " labeling the patient."
     )
     user = (
         "Using the following score summary, produce analysis in JSON with keys "

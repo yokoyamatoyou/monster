@@ -7,6 +7,9 @@ This repository contains code and documentation for an AI-driven patient profili
 - Phase 1 implementation guidance is documented in [docs/phase1_instructions.md](docs/phase1_instructions.md).
 - Phase 2 introduced a basic questionnaire flow with scoring and radar chart visualization.
 - Phase 3 adds a UI mode selector allowing patients to answer the questionnaire and staff to review stored results.
+- Phase 4 introduces consent messaging, error handling and automated tests. A
+  deployment guide is provided in [docs/deployment_guide.md](docs/deployment_guide.md).
+- Participants see a consent notice explaining anonymous data use before starting the questionnaire.
 
 ## Setup
 
@@ -17,6 +20,18 @@ This repository contains code and documentation for an AI-driven patient profili
    pip install -r requirements.txt
    ```
 3. Set your OpenAI API key in the environment variable `OPENAI_API_KEY`.
+
+4. Run tests using `pytest`:
+
+   ```bash
+   pytest
+   ```
+
+5. Launch the application locally:
+
+   ```bash
+   streamlit run app.py
+   ```
 
 ## Repository structure
 
