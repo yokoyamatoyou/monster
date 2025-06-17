@@ -24,9 +24,9 @@ def _call_openai(messages: List[dict], temperature: float) -> str:
 def generate_question(axis: str, temperature: float = 0.4) -> str:
     """Generate a single question for the given axis."""
     system = (
-        "You are a medical survey designer. Use non-clinical wording to inquire about "
-        "patient personality traits. Format your reply as JSON with keys 'question_text' "
-        "and 'axis'."
+        "You are a medical survey designer. Use non-clinical wording in Japanese to "
+        "inquire about patient personality traits. The question must be short and the "
+        "reply should be formatted as JSON with keys 'question_text' and 'axis'."
     )
     user = (
         "Generate one short question related to the following axis "
