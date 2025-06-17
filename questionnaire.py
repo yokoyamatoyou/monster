@@ -67,7 +67,7 @@ def _generate_unique_question(axis: str, existing: List[str], temp: float, categ
     return q
 
 
-def generate_questionnaire(num_questions_per_axis: int = 5) -> List[dict]:
+def generate_questionnaire(num_questions_per_axis: int = 3) -> List[dict]:
     """Generate a list of questions covering all axes."""
     questions: List[dict] = []
     existing_texts: List[str] = []
