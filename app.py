@@ -1,6 +1,7 @@
 """Streamlit application for questionnaire and staff dashboard (Phase 3)."""
 import json
 import pathlib
+from datetime import datetime, timezone
 
 import streamlit as st
 import pandas as pd
@@ -34,6 +35,14 @@ def init_state() -> None:
         st.session_state.answers = []
     if "index" not in st.session_state:
         st.session_state.index = 0
+    if "started" not in st.session_state:
+        st.session_state.started = False
+    if "user_id" not in st.session_state:
+        st.session_state.user_id = ""
+    if "user_name" not in st.session_state:
+        st.session_state.user_name = ""
+    if "start_time" not in st.session_state:
+        st.session_state.start_time = ""
 
 
 def show_consent() -> None:
@@ -41,16 +50,40 @@ def show_consent() -> None:
     st.info(CONSENT_MESSAGE)
 
 
+def show_start_page() -> None:
+    st.text_input("ユーザーID", key="input_user_id")
+    st.text_input("名前", key="input_user_name")
+    if st.button("スタート"):
+        user_id = st.session_state.input_user_id
+        if not user_id:
+            st.warning("ユーザーIDを入力してください")
+            return
+        name = data_persistence.get_user_name(user_id)
+        if name:
+            st.session_state.user_name = name
+        else:
+            if not st.session_state.input_user_name:
+                st.warning("名前を入力してください")
+                return
+            st.session_state.user_name = st.session_state.input_user_name
+            data_persistence.save_user(user_id, st.session_state.user_name)
+        st.session_state.user_id = user_id
+        st.session_state.start_time = datetime.now(timezone.utc).isoformat()
+        st.session_state.started = True
+        st.experimental_rerun()
+
+
 def save_results(scores: dict) -> None:
     summary = prompts.evaluation_summary(scores)
     for i, q in enumerate(st.session_state.questions):
         ans = st.session_state.answers[i]
         data_persistence.save_interaction(
-            user_id="demo_user",
+            user_id=st.session_state.user_id or "anonymous",
             question_text=q["question_text"],
             answer_text=str(ans["score"]),
             total_question_count=len(st.session_state.questions),
             evaluation_summary=summary,
+            start_timestamp=st.session_state.start_time,
         )
 
 
@@ -111,7 +144,10 @@ def main() -> None:
     if mode == "患者モード":
         show_consent()
         init_state()
-        questionnaire_flow()
+        if not st.session_state.started:
+            show_start_page()
+        else:
+            questionnaire_flow()
     else:
         staff_dashboard()
 
