@@ -73,8 +73,8 @@ def show_start_page() -> None:
         st.rerun()
 
 
-def save_results(scores: dict) -> None:
-    summary = prompts.evaluation_summary(scores)
+def save_results(scores: dict, summary: str) -> None:
+    """Persist questionnaire answers with the provided summary."""
     for i, q in enumerate(st.session_state.questions):
         ans = st.session_state.answers[i]
         data_persistence.save_interaction(
@@ -87,20 +87,30 @@ def save_results(scores: dict) -> None:
         )
 
 
-def show_results(scores: dict) -> None:
+def show_results(scores: dict, summary: str) -> None:
+    """Display radar chart and AI-generated feedback."""
     st.subheader("結果")
     fig = questionnaire.radar_chart(scores)
     st.plotly_chart(fig, use_container_width=True)
+
     st.write("### 患者向けフィードバック")
-    st.write(prompts.feedback_for_patient(json.dumps(scores)))
+    st.write(prompts.feedback_for_patient(summary))
+
+    st.write("### 医療従事者向け分析")
+    staff_fb = prompts.feedback_for_staff(summary)
+    try:
+        st.json(json.loads(staff_fb))
+    except json.JSONDecodeError:
+        st.write(staff_fb)
 
 
 def questionnaire_flow() -> None:
     if st.session_state.index >= len(st.session_state.questions):
         with st.spinner("分析中..."):
             scores = questionnaire.score_answers(st.session_state.answers)
-            save_results(scores)
-            show_results(scores)
+            summary = prompts.evaluation_summary(scores)
+            save_results(scores, summary)
+            show_results(scores, summary)
         return
 
     q = st.session_state.questions[st.session_state.index]
@@ -144,8 +154,16 @@ def staff_dashboard() -> None:
         format_func=lambda i: f"{sessions.loc[i, 'user_id']} ({i})"
     )
     user_id = sessions.loc[selected, "user_id"]
+    summary = sessions.loc[selected, "evaluation_summary"]
     st.write("### 評価サマリー")
-    st.write(sessions.loc[selected, "evaluation_summary"])
+    st.write(summary)
+
+    st.write("### AIによる推奨対応")
+    fb = prompts.feedback_for_staff(summary)
+    try:
+        st.json(json.loads(fb))
+    except json.JSONDecodeError:
+        st.write(fb)
     st.write("### 回答一覧")
     st.table(df[df["user_id"] == user_id][["question_text", "answer_text"]])
 
