@@ -36,9 +36,12 @@ def generate_question(axis: str, category: str | None = None, temperature: float
     if category is None:
         category = random.choice(AXIS_CATEGORIES.get(axis, ["一般"]))
     system = (
-        "You are a medical survey designer. Use non-clinical wording in Japanese to "
-        "ask the patient about preferences or concerns as part of a treatment plan. "
-        "The reply must be JSON with keys 'question_text' and 'axis'."
+        "あなたは医療調査の設計者です。非臨床的な言葉を使い、治療計画の一環として患者の好みや"
+        "懸念について尋ねます。返信は必ず 'question_text' と 'axis' をキーに持つJSON形式とします。"
+        "生成する質問は、以前に生成したものと意味的に重複しないようにしてください。"
+        "同じ趣旨の質問を異なる言葉で言い換えることは避けてください。"
+        "質問文は、患者が『全くそう思わない』から『とてもそう思う』までの5段階の選択肢で"
+        "直感的に回答できる、自己完結した短い問いかけにしてください。"
     )
     user = (
         f"Category: {category}. Generate one short question related to the axis '{axis}' "
@@ -54,9 +57,13 @@ def generate_question(axis: str, category: str | None = None, temperature: float
 def feedback_for_patient(summary: str, temperature: float = 0.1) -> str:
     """Generate patient-facing feedback based on answer summary."""
     system = (
-        "You are an empathetic counselor. Provide reassuring feedback summarizing what "
-        "the patient values. Your tone must be supportive and avoid language that could "
-        "stigmatize or label the patient. Mention nothing about risk."
+        "あなたは共感的なカウンセラーです。患者が大切にしている価値観を要約し、安心感を"
+        "与えるフィードバックを提供します。あなたのトーンは常に協力的で、患者を分類したり"
+        "評価したりする言葉を完全に避けてください。リスクについては一切言及してはいけません。"
+        "ここでの主目的は、患者が『自分の気持ちを理解してもらえた』と感じることです。"
+        "フィードバックは、患者の考えを肯定的に確認し、今後の治療計画に活かすための前向きな"
+        "ものとして構成してください。心理的な分析や診断と受け取られる可能性のある表現は、"
+        "いかなる場合も使用しないでください。"
     )
     user = (
         "Based on the following summary of questionnaire answers, write concise "
@@ -77,9 +84,13 @@ def feedback_for_staff(summary: str, temperature: float = 0.1) -> str:
         " labeling the patient."
     )
     user = (
-        "Using the following score summary, produce analysis in JSON with keys "
-        "'risk_profile_summary', 'caution_points', 'recommended_actions', "
-        "'escalation_plan'.\n" + summary
+        "以下のスコア概要を使用して、指定のJSON形式で分析レポートを生成してください。\n"
+        "各キーには以下の内容を含めてください:\n"
+        "- 'risk_profile_summary': スコア全体から読み取れる、患者のコミュニケーションにおける全体的な傾向の要約\n"
+        "- 'caution_points': 患者との信頼関係を損なう可能性があるため、スタッフが避けるべき具体的な言動のリスト\n"
+        "- 'recommended_actions': 信頼関係を構築するために推奨される、具体的な声かけや対応のリスト\n"
+        "- 'escalation_plan': 万が一、問題行動が見られた場合に備えた段階的な対応計画\n\n"
+        f"スコア概要: {summary}"
     )
     messages = [
         {"role": "system", "content": system},

@@ -93,8 +93,6 @@ def show_results(scores: dict) -> None:
     st.plotly_chart(fig, use_container_width=True)
     st.write("### 患者向けフィードバック")
     st.write(prompts.feedback_for_patient(json.dumps(scores)))
-    st.write("### 医療従事者向けフィードバック")
-    st.json(json.loads(prompts.feedback_for_staff(json.dumps(scores))))
 
 
 def questionnaire_flow() -> None:
@@ -105,6 +103,9 @@ def questionnaire_flow() -> None:
         return
 
     q = st.session_state.questions[st.session_state.index]
+    total = len(st.session_state.questions)
+    current = st.session_state.index + 1
+    st.write(f"質問 {current} / {total}")
     st.write(f"**{q['question_text']}**")
     scale_labels = {
         1: "1 全くそう思わない",
