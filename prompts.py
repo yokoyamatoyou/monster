@@ -68,3 +68,14 @@ def feedback_for_staff(summary: str, temperature: float = 0.1) -> str:
         {"role": "user", "content": user},
     ]
     return _call_openai(messages, temperature)
+
+
+def evaluation_summary(scores: dict, temperature: float = 0.1) -> str:
+    """Summarize score rationale in ~200 characters."""
+    system = "You summarize patient questionnaire results in around 200 Japanese characters."
+    user = "Summarize the following scores: " + str(scores)
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": user},
+    ]
+    return _call_openai(messages, temperature)
