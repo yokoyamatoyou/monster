@@ -106,8 +106,18 @@ def questionnaire_flow() -> None:
 
     q = st.session_state.questions[st.session_state.index]
     st.write(f"**{q['question_text']}**")
+    scale_labels = {
+        1: "1 全くそう思わない",
+        2: "2 あまりそう思わない",
+        3: "3 どちらとも言えない",
+        4: "4 そう思う",
+        5: "5 とてもそう思う",
+    }
     choice = st.radio(
-        "回答を選択してください", [1, 2, 3, 4, 5], key=f"q{st.session_state.index}"
+        "回答を選択してください",
+        [1, 2, 3, 4, 5],
+        format_func=lambda x: scale_labels[x],
+        key=f"q{st.session_state.index}",
     )
     if st.button("次へ"):
         st.session_state.answers.append({"axis": q["axis"], "score": choice})

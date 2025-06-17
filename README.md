@@ -35,9 +35,19 @@ This repository contains code and documentation for an AI-driven patient profili
 
    Windows users can run `run_app.bat` for convenience:
 
-   ```bat
-   run_app.bat
-   ```
+  ```bat
+  run_app.bat
+  ```
+
+## Answer scale
+
+Questions are answered on a five-point Likert scale. The options correspond to:
+
+1. **全くそう思わない** (strongly disagree)
+2. **あまりそう思わない** (disagree)
+3. **どちらとも言えない** (neutral)
+4. **そう思う** (agree)
+5. **とてもそう思う** (strongly agree)
 
 ## Repository structure
 
