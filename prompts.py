@@ -36,9 +36,10 @@ def generate_question(axis: str, category: str | None = None, temperature: float
     if category is None:
         category = random.choice(AXIS_CATEGORIES.get(axis, ["一般"]))
     system = (
-        "あなたは医療調査の設計者です。非臨床的な言葉を使い、治療計画の一環として患者の好みや"
-        "懸念について尋ねます。返信は必ず 'question_text' と 'axis' をキーに持つJSON形式とします。"
-        "生成する質問は、以前に生成したものと意味的に重複しないようにしてください。"
+        "あなたは医療調査の設計者です。SAPAS と MSI-BPD の質問項目を可能な限り踏襲し、"
+        "非臨床的な言葉で治療計画の一環として患者の好みや懸念を尋ねます。"
+        "返信は必ず 'question_text' と 'axis' をキーに持つ JSON 形式とします。"
+        "質問は指定されたカテゴリに沿って作成し、以前に生成したものと意味的に重複しないようにしてください。"
         "同じ趣旨の質問を異なる言葉で言い換えることは避けてください。"
         "質問文は、患者が『全くそう思わない』から『とてもそう思う』までの5段階の選択肢で"
         "直感的に回答できる、自己完結した短い問いかけにしてください。"
@@ -57,13 +58,12 @@ def generate_question(axis: str, category: str | None = None, temperature: float
 def feedback_for_patient(summary: str, temperature: float = 0.1) -> str:
     """Generate patient-facing feedback based on answer summary."""
     system = (
-        "あなたは共感的なカウンセラーです。患者が大切にしている価値観を要約し、安心感を"
-        "与えるフィードバックを提供します。あなたのトーンは常に協力的で、患者を分類したり"
-        "評価したりする言葉を完全に避けてください。リスクについては一切言及してはいけません。"
-        "ここでの主目的は、患者が『自分の気持ちを理解してもらえた』と感じることです。"
-        "フィードバックは、患者の考えを肯定的に確認し、今後の治療計画に活かすための前向きな"
-        "ものとして構成してください。心理的な分析や診断と受け取られる可能性のある表現は、"
-        "いかなる場合も使用しないでください。"
+        "あなたは共感的なカウンセラーです。SAPAS と MSI-BPD を参考にした質問への回答を踏まえ、"
+        "患者が大切にしている価値観を要約し、安心感を与えるフィードバックを提供します。"
+        "あなたのトーンは常に協力的で、患者を分類したり評価したりする言葉を完全に避けてください。"
+        "リスクについては一切言及してはいけません。ここでの主目的は、患者が『自分の気持ちを理解してもらえた』と感じることです。"
+        "フィードバックは、回答内容を反映した個別のアドバイスとして、今後の治療計画に活かすための前向きなものとして構成してください。"
+        "心理的な分析や診断と受け取られる可能性のある表現は、いかなる場合も使用しないでください。"
         "内容は日本語で300文字以上600文字未満にまとめてください。"
     )
     user = (
@@ -82,9 +82,10 @@ def feedback_for_staff(summary: str, temperature: float = 0.1) -> str:
     """Generate staff-facing feedback in structured JSON."""
     system = (
         "You are an experienced clinical psychologist and risk manager."
+        " The questionnaire items follow SAPAS and MSI-BPD as closely as possible."
         " Provide actionable suggestions in Japanese and avoid stigmatizing or"
         " labeling the patient."
-        " 各項目を合計300文字以上600文字未満に収まるよう調整してください。"
+        " 回答内容に基づいたパーソナライズされた助言を、各項目合計300文字以上600文字未満に収まるよう調整してください。"
     )
     user = (
         "以下のスコア概要を使用して、指定のJSON形式で分析レポートを生成してください。\n"
@@ -105,7 +106,10 @@ def feedback_for_staff(summary: str, temperature: float = 0.1) -> str:
 
 def evaluation_summary(scores: dict, temperature: float = 0.1) -> str:
     """Summarize score rationale in ~200 characters."""
-    system = "You summarize patient questionnaire results in around 200 Japanese characters."
+    system = (
+        "You summarize patient questionnaire results in around 200 Japanese characters."
+        " The questions are based on SAPAS and MSI-BPD, mapped to five behavioral axes."
+    )
     user = "Summarize the following scores: " + str(scores)
     messages = [
         {"role": "system", "content": system},
