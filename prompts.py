@@ -95,6 +95,7 @@ def feedback_for_staff(summary: str, temperature: float = 0.1) -> str:
         "- 'recommended_actions': 信頼関係を構築するために推奨される、具体的な声かけや対応のリスト\n"
         "- 'escalation_plan': 万が一、問題行動が見られた場合に備えた段階的な対応計画\n\n"
         "出力は合計300文字以上600文字未満になるようにしてください。\n"
+        "JSONオブジェクト以外の文字列は出力しないでください。\n"
         f"スコア概要: {summary}"
     )
     messages = [
