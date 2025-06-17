@@ -33,6 +33,12 @@ This repository contains code and documentation for an AI-driven patient profili
    streamlit run app.py
    ```
 
+   Windows users can run `run_app.bat` for convenience:
+
+   ```bat
+   run_app.bat
+   ```
+
 ## Repository structure
 
 - `app.py` – Streamlit app with patient and staff modes.
