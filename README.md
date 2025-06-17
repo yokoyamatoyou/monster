@@ -14,7 +14,7 @@ This repository contains code and documentation for an AI-driven patient profili
 ## Setup
 
 1. Install Python 3.11 and create a virtual environment.
-2. Install required packages:
+2. Install required packages (the app expects Streamlit version 1.25 or later):
 
    ```bash
    pip install -r requirements.txt
