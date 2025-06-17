@@ -55,15 +55,46 @@ def _is_similar(text: str, existing: List[str], threshold: float = 0.9) -> bool:
 
 
 def _generate_unique_question(axis: str, existing: List[str], temp: float, category: str) -> dict:
-    """Generate a question avoiding semantic similarity."""
+    """Generate a question avoiding semantic similarity.
+
+    The OpenAI API may occasionally return non-dictionary JSON such as a list or
+    a plain string.  To ensure robustness we normalise the parsed value to a
+    dictionary with ``question_text`` and ``axis`` keys before checking for
+    similarity.
+    """
+
     for _ in range(5):
         q_json = prompts.generate_question(axis, category=category, temperature=temp)
         try:
-            q = json.loads(q_json)
+            parsed = json.loads(q_json)
         except json.JSONDecodeError:
-            q = {"question_text": q_json, "axis": axis}
+            parsed = q_json
+
+        # Normalise to a dict with required keys
+        if isinstance(parsed, dict):
+            question_text = parsed.get("question_text", "")
+            axis_val = parsed.get("axis", axis)
+        elif isinstance(parsed, list):
+            if parsed:
+                item = parsed[0]
+                if isinstance(item, dict):
+                    question_text = item.get("question_text", "")
+                    axis_val = item.get("axis", axis)
+                else:
+                    question_text = str(item)
+                    axis_val = axis
+            else:
+                question_text = ""
+                axis_val = axis
+        else:
+            question_text = str(parsed)
+            axis_val = axis
+
+        q = {"question_text": question_text, "axis": axis_val}
+
         if not _is_similar(q["question_text"], existing):
             return q
+
     return q
 
 
