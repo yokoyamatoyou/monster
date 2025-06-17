@@ -64,10 +64,12 @@ def feedback_for_patient(summary: str, temperature: float = 0.1) -> str:
         "フィードバックは、患者の考えを肯定的に確認し、今後の治療計画に活かすための前向きな"
         "ものとして構成してください。心理的な分析や診断と受け取られる可能性のある表現は、"
         "いかなる場合も使用しないでください。"
+        "内容は日本語で300文字以上600文字未満にまとめてください。"
     )
     user = (
         "Based on the following summary of questionnaire answers, write concise "
-        "feedback titled '診療方針に関するご確認'.\n" + summary
+        "feedback titled '診療方針に関するご確認'."
+        " 出力は300文字以上600文字未満の日本語にしてください。\n" + summary
     )
     messages = [
         {"role": "system", "content": system},
@@ -82,6 +84,7 @@ def feedback_for_staff(summary: str, temperature: float = 0.1) -> str:
         "You are an experienced clinical psychologist and risk manager."
         " Provide actionable suggestions in Japanese and avoid stigmatizing or"
         " labeling the patient."
+        " 各項目を合計300文字以上600文字未満に収まるよう調整してください。"
     )
     user = (
         "以下のスコア概要を使用して、指定のJSON形式で分析レポートを生成してください。\n"
@@ -90,6 +93,7 @@ def feedback_for_staff(summary: str, temperature: float = 0.1) -> str:
         "- 'caution_points': 患者との信頼関係を損なう可能性があるため、スタッフが避けるべき具体的な言動のリスト\n"
         "- 'recommended_actions': 信頼関係を構築するために推奨される、具体的な声かけや対応のリスト\n"
         "- 'escalation_plan': 万が一、問題行動が見られた場合に備えた段階的な対応計画\n\n"
+        "出力は合計300文字以上600文字未満になるようにしてください。\n"
         f"スコア概要: {summary}"
     )
     messages = [

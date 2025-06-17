@@ -97,9 +97,10 @@ def show_results(scores: dict) -> None:
 
 def questionnaire_flow() -> None:
     if st.session_state.index >= len(st.session_state.questions):
-        scores = questionnaire.score_answers(st.session_state.answers)
-        save_results(scores)
-        show_results(scores)
+        with st.spinner("分析中..."):
+            scores = questionnaire.score_answers(st.session_state.answers)
+            save_results(scores)
+            show_results(scores)
         return
 
     q = st.session_state.questions[st.session_state.index]
