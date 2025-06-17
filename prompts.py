@@ -11,12 +11,12 @@ def _call_openai(messages: List[dict], temperature: float) -> str:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise ValueError("OPENAI_API_KEY not set")
-    openai.api_key = api_key
+    client = openai.OpenAI(api_key=api_key)
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4.1", messages=messages, temperature=temperature
         )
-        return response.choices[0].message["content"].strip()
+        return response.choices[0].message.content.strip()
     except openai.OpenAIError as e:
         return f"APIError: {e}"
 
