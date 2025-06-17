@@ -1,0 +1,10 @@
+body {
+    background-color: #FFFFFF;
+    color: #4A4A4A;
+    font-family: 'Noto Sans JP', sans-serif;
+}
+
+.button-primary {
+    background-color: #4A90E2;
+    color: #FFFFFF;
+}
