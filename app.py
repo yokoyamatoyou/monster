@@ -70,7 +70,7 @@ def show_start_page() -> None:
         st.session_state.user_id = user_id
         st.session_state.start_time = datetime.now(timezone.utc).isoformat()
         st.session_state.started = True
-        st.experimental_rerun()
+        st.rerun()
 
 
 def save_results(scores: dict) -> None:
@@ -112,7 +112,7 @@ def questionnaire_flow() -> None:
     if st.button("次へ"):
         st.session_state.answers.append({"axis": q["axis"], "score": choice})
         st.session_state.index += 1
-        st.experimental_rerun()
+        st.rerun()
 
 
 def staff_dashboard() -> None:
