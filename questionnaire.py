@@ -22,35 +22,27 @@ AXES = [
 ]
 
 
-def _embedding(text: str) -> List[float]:
-    """Return embedding for text using OpenAI API; empty list if unavailable."""
+def _is_similar(text: str, existing: List[str]) -> bool:
+    """Check similarity using GPT-4.1 mini rather than embeddings."""
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        return []
+        return False
     client = openai.OpenAI(api_key=api_key)
-    try:
-        resp = client.embeddings.create(model="text-embedding-3-small", input=[text])
-        return resp.data[0].embedding
-    except openai.OpenAIError:
-        return []
-
-
-def _cosine_similarity(v1: List[float], v2: List[float]) -> float:
-    if not v1 or not v2:
-        return 0.0
-    num = sum(a * b for a, b in zip(v1, v2))
-    denom = (sum(a * a for a in v1) ** 0.5) * (sum(b * b for b in v2) ** 0.5)
-    if denom == 0:
-        return 0.0
-    return num / denom
-
-
-def _is_similar(text: str, existing: List[str], threshold: float = 0.9) -> bool:
-    emb1 = _embedding(text)
     for t in existing:
-        emb2 = _embedding(t)
-        if _cosine_similarity(emb1, emb2) >= threshold:
-            return True
+        messages = [
+            {
+                "role": "system",
+                "content": "次の二つの質問がほぼ同じ内容か判定し、似ていれば'はい'、違えば'いいえ'のみを返してください。",
+            },
+            {"role": "user", "content": f"Q1: {text}\nQ2: {t}"},
+        ]
+        try:
+            resp = client.chat.completions.create(model=prompts.MODEL, messages=messages, temperature=0)
+            ans = resp.choices[0].message.content.strip()
+            if ans.startswith("はい") or ans.lower().startswith("yes"):
+                return True
+        except openai.OpenAIError:
+            return False
     return False
 
 
