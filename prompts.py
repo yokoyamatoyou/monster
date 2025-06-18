@@ -7,6 +7,8 @@ import asyncio
 from typing import List, Optional
 import openai
 
+MODEL = "gpt-4.1-mini"
+
 # Predefined categories for each axis to diversify questions
 AXIS_CATEGORIES = {
     "特権意識と期待": ["治療計画", "予約や待ち時間", "サービスへの要望"],
@@ -25,7 +27,7 @@ def _call_openai(messages: List[dict], temperature: float) -> str:
     client = openai.OpenAI(api_key=api_key)
     try:
         response = client.chat.completions.create(
-            model="gpt-4.1", messages=messages, temperature=temperature
+            model=MODEL, messages=messages, temperature=temperature
         )
         return response.choices[0].message.content.strip()
     except openai.OpenAIError as e:
@@ -40,7 +42,7 @@ async def _acall_openai(messages: List[dict], temperature: float) -> str:
     client = openai.AsyncOpenAI(api_key=api_key)
     try:
         response = await client.chat.completions.create(
-            model="gpt-4.1", messages=messages, temperature=temperature
+            model=MODEL, messages=messages, temperature=temperature
         )
         return response.choices[0].message.content.strip()
     except openai.OpenAIError as e:
@@ -105,6 +107,7 @@ def feedback_for_patient(summary: str, user_name: Optional[str] = None, temperat
         "あなたは共感的なカウンセラーです。SAPAS と MSI-BPD を参考にした質問への回答を踏まえ、"
         "患者が大切にしている価値観を要約し、安心感を与えるフィードバックを提供します。"
         "あなたのトーンは常に協力的で、患者を分類したり評価したりする言葉を完全に避けてください。"
+        "否定的な名詞や評価的表現を使わず、安心感を与える前向きな言葉を選んでください。"
         "リスクについては一切言及してはいけません。ここでの主目的は、患者が『自分の気持ちを理解してもらえた』と感じることです。"
         "フィードバックは、回答内容を反映した個別のアドバイスとして、今後の治療計画に活かすための前向きなものとして構成してください。"
         "心理的な分析や診断と受け取られる可能性のある表現は、いかなる場合も使用しないでください。"
@@ -129,6 +132,7 @@ async def feedback_for_patient_async(summary: str, user_name: Optional[str] = No
         "あなたは共感的なカウンセラーです。SAPAS と MSI-BPD を参考にした質問への回答を踏まえ、"
         "患者が大切にしている価値観を要約し、安心感を与えるフィードバックを提供します。"
         "あなたのトーンは常に協力的で、患者を分類したり評価したりする言葉を完全に避けてください。"
+        "否定的な名詞や評価的表現を使わず、安心感を与える前向きな言葉を選んでください。"
         "リスクについては一切言及してはいけません。ここでの主目的は、患者が『自分の気持ちを理解してもらえた』と感じることです。"
         "フィードバックは、回答内容を反映した個別のアドバイスとして、今後の治療計画に活かすための前向きなものとして構成してください。"
         "心理的な分析や診断と受け取られる可能性のある表現は、いかなる場合も使用しないでください。"
@@ -148,7 +152,7 @@ async def feedback_for_patient_async(summary: str, user_name: Optional[str] = No
 def feedback_for_staff(summary: str, temperature: float = 0.1) -> str:
     """Generate staff-facing feedback in structured JSON."""
     system = (
-        "You are an experienced clinical psychologist and risk manager."
+        "You are an experienced clinical psychologist and hospital risk assessment specialist."
         " The questionnaire items follow SAPAS and MSI-BPD as closely as possible."
         " Provide actionable suggestions in Japanese and avoid stigmatizing or"
         " labeling the patient."
@@ -175,7 +179,7 @@ def feedback_for_staff(summary: str, temperature: float = 0.1) -> str:
 async def feedback_for_staff_async(summary: str, temperature: float = 0.1) -> str:
     """Asynchronously generate staff-facing feedback."""
     system = (
-        "You are an experienced clinical psychologist and risk manager."
+        "You are an experienced clinical psychologist and hospital risk assessment specialist."
         " The questionnaire items follow SAPAS and MSI-BPD as closely as possible."
         " Provide actionable suggestions in Japanese and avoid stigmatizing or"
         " labeling the patient."
