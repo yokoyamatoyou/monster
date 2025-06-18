@@ -8,6 +8,7 @@ import random
 from typing import Dict, List
 
 import openai
+import asyncio
 
 import plotly.graph_objects as go
 
@@ -38,6 +39,30 @@ def _is_similar(text: str, existing: List[str]) -> bool:
         ]
         try:
             resp = client.chat.completions.create(model=prompts.MODEL, messages=messages, temperature=0)
+            ans = resp.choices[0].message.content.strip()
+            if ans.startswith("はい") or ans.lower().startswith("yes"):
+                return True
+        except openai.OpenAIError:
+            return False
+    return False
+
+
+async def _is_similar_async(text: str, existing: List[str]) -> bool:
+    """Asynchronously check similarity using GPT-4.1 mini."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return False
+    client = openai.AsyncOpenAI(api_key=api_key)
+    for t in existing:
+        messages = [
+            {
+                "role": "system",
+                "content": "次の二つの質問がほぼ同じ内容か判定し、似ていれば'はい'、違えば'いいえ'のみを返してください。",
+            },
+            {"role": "user", "content": f"Q1: {text}\nQ2: {t}"},
+        ]
+        try:
+            resp = await client.chat.completions.create(model=prompts.MODEL, messages=messages, temperature=0)
             ans = resp.choices[0].message.content.strip()
             if ans.startswith("はい") or ans.lower().startswith("yes"):
                 return True
@@ -90,49 +115,83 @@ def _generate_unique_question(axis: str, existing: List[str], temp: float, categ
     return q
 
 
-from concurrent.futures import ThreadPoolExecutor
-import threading
+async def _generate_unique_question_async(axis: str, existing: List[str], temp: float, category: str) -> dict:
+    """Asynchronously generate a question avoiding semantic similarity."""
+    for _ in range(5):
+        q_json = await prompts.generate_question_async(axis, category=category, temperature=temp)
+        try:
+            parsed = json.loads(q_json)
+        except json.JSONDecodeError:
+            parsed = q_json
+
+        if isinstance(parsed, dict):
+            question_text = parsed.get("question_text", "")
+            axis_val = parsed.get("axis", axis)
+        elif isinstance(parsed, list):
+            if parsed:
+                item = parsed[0]
+                if isinstance(item, dict):
+                    question_text = item.get("question_text", "")
+                    axis_val = item.get("axis", axis)
+                else:
+                    question_text = str(item)
+                    axis_val = axis
+            else:
+                question_text = ""
+                axis_val = axis
+        else:
+            question_text = str(parsed)
+            axis_val = axis
+
+        q = {"question_text": question_text, "axis": axis_val}
+
+        if not await _is_similar_async(q["question_text"], existing):
+            return q
+
+    return q
 
 
-def _generate_axis_questions(
+import asyncio
+
+
+async def _generate_axis_questions_async(
     axis: str,
     num_questions: int,
     existing: List[str],
-    lock: threading.Lock,
+    lock: asyncio.Lock,
 ) -> List[dict]:
-    """Generate questions for a single axis in a thread."""
+    """Generate questions for a single axis asynchronously."""
     axis_questions: List[dict] = []
     for i in range(num_questions):
         temp = 0.4 + 0.02 * i
         category = random.choice(prompts.AXIS_CATEGORIES.get(axis, ["一般"]))
-        q = _generate_unique_question(axis, existing, temp, category)
-        with lock:
+        q = await _generate_unique_question_async(axis, existing, temp, category)
+        async with lock:
             existing.append(q["question_text"])
         axis_questions.append(q)
     return axis_questions
 
 
-def generate_questionnaire(num_questions_per_axis: int = 3) -> List[dict]:
-    """Generate a list of questions covering all axes using threads."""
+async def generate_questionnaire_async(num_questions_per_axis: int = 3) -> List[dict]:
+    """Asynchronously generate questions for all axes."""
     questions: List[dict] = []
     existing_texts: List[str] = []
-    lock = threading.Lock()
+    lock = asyncio.Lock()
 
-    with ThreadPoolExecutor(max_workers=len(AXES)) as executor:
-        futures = [
-            executor.submit(
-                _generate_axis_questions,
-                axis,
-                num_questions_per_axis,
-                existing_texts,
-                lock,
-            )
-            for axis in AXES
-        ]
-        for f in futures:
-            questions.extend(f.result())
+    tasks = [
+        _generate_axis_questions_async(axis, num_questions_per_axis, existing_texts, lock)
+        for axis in AXES
+    ]
+    results = await asyncio.gather(*tasks)
+    for qs in results:
+        questions.extend(qs)
 
     return questions
+
+
+def generate_questionnaire(num_questions_per_axis: int = 3) -> List[dict]:
+    """Synchronous wrapper around asynchronous questionnaire generation."""
+    return asyncio.run(generate_questionnaire_async(num_questions_per_axis))
 
 
 def score_answers(responses: List[dict]) -> Dict[str, float]:

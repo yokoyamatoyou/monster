@@ -33,3 +33,15 @@ def test_save_and_get_user(tmp_path, monkeypatch):
     data_persistence.save_user("abc", "Taro")
     rows = list(csv.DictReader(users.open()))
     assert len(rows) == 1
+
+
+def test_get_question_history(tmp_path, monkeypatch):
+    csv_path = tmp_path / "interactions.csv"
+    monkeypatch.setattr(data_persistence, "CSV_PATH", csv_path)
+    monkeypatch.setattr(data_persistence, "USERS_PATH", tmp_path / "users.csv")
+    ts = "2024-01-01T00:00:00+00:00"
+    data_persistence.save_interaction("u1", "q1", "a", 1, "s", start_timestamp=ts)
+    data_persistence.save_interaction("u2", "q2", "a", 1, "s", start_timestamp=ts)
+    data_persistence.save_interaction("u1", "q3", "a", 1, "s", start_timestamp=ts)
+    history = data_persistence.get_question_history("u1")
+    assert history == ["q1", "q3"]

@@ -20,11 +20,15 @@ def test_score_answers():
 def test_generate_questionnaire_count(monkeypatch):
     import prompts
 
-    def dummy_gen(axis: str, category: str | None = None, temperature: float = 0.4) -> str:
+    async def dummy_gen(axis: str, category: str | None = None, temperature: float = 0.4) -> str:
         return '{"question_text": "dummy", "axis": "' + axis + '"}'
 
-    monkeypatch.setattr(prompts, "generate_question", dummy_gen)
-    monkeypatch.setattr(questionnaire, "_is_similar", lambda *args, **kwargs: False)
+    monkeypatch.setattr(prompts, "generate_question_async", dummy_gen)
+
+    async def dummy_similar(*args, **kwargs):
+        return False
+
+    monkeypatch.setattr(questionnaire, "_is_similar_async", dummy_similar)
     qs = questionnaire.generate_questionnaire()
     assert len(qs) == 15
     axes = {q["axis"] for q in qs}

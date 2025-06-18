@@ -77,3 +77,15 @@ def get_user_name(user_id: str) -> str | None:
             if row["user_id"] == user_id:
                 return row["user_name"]
     return None
+
+
+def get_question_history(user_id: str) -> list[str]:
+    """Return list of past question texts for the given user."""
+    if not CSV_PATH.exists():
+        return []
+    history: list[str] = []
+    with CSV_PATH.open(newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            if row["user_id"] == user_id:
+                history.append(row["question_text"])
+    return history
